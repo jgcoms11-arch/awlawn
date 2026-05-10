@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel | A&W Lawn and Landscaping</title>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div style="font-size:40px;margin-bottom:12px;">🌿</div>
+    <h2>A&amp;W Gallery Admin</h2>
+    <p>Enter your password to manage photos</p>
+    <div class="form-group" style="text-align:left;margin-bottom:16px;">
+      <label for="pwInput">Password</label>
+      <input type="password" id="pwInput" placeholder="Enter password" style="width:100%;"/>
+    </div>
+    <button class="btn btn-green" style="width:100%;justify-content:center;" onclick="checkLogin()">Sign In</button>
+    <p class="login-error" id="loginError">Incorrect password. Please try again.</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="adminPanel" style="display:none;">
+  <!-- Sidebar -->
+  <div class="admin-sidebar">
+    <h3>🌿 A&amp;W Admin</h3>
+    <ul class="admin-nav">
+      <li><a href="#upload" class="active">📤 Upload Photos</a></li>
+      <li><a href="#posts">🖼️ Manage Posts</a></li>
+      <li><a href="#publish">🚀 Publish Gallery</a></li>
+      <li><a href="index.html" target="_blank">🌐 View Website</a></li>
+      <li><a href="#" onclick="logout()">🚪 Log Out</a></li>
+    </ul>
+    <div style="margin-top:auto;padding-top:40px;font-size:12px;color:rgba(255,255,255,0.4);">A&amp;W Lawn &amp; Landscaping<br/>Gallery Manager</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="admin-content">
+
+    <!-- Upload Section -->
+    <div class="admin-card" id="upload">
+      <h2>Upload New Photos</h2>
+      <div class="upload-zone" id="uploadZone">
+        <div style="font-size:40px;margin-bottom:8px;">📸</div>
+        <strong>Drag &amp; drop photos here</strong>
+        <p>or click to browse — up to 20 photos at once</p>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;"/>
+      </div>
+      <div id="uploadPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;"></div>
+      <div id="uploadForm" style="display:none;margin-top:24px;">
+        <div class="form-grid">
+          <div class="form-group"><label for="postTitle">Post Title *</label><input type="text" id="postTitle" placeholder="e.g. Spring Cleanup — Johnson Property"/></div>
+          <div class="form-group"><label for="postCategory">Category</label>
+            <select id="postCategory">
+              <option value="">Select category...</option>
+              <option>Lawn Care</option>
+              <option>Landscape Design</option>
+              <option>Mulching & Beds</option>
+              <option>Cleanup</option>
+              <option>Hardscaping</option>
+            </select>
+          </div>
+          <div class="form-group full"><label for="postDesc">Description (optional)</label><textarea id="postDesc" placeholder="Brief description of the project..." style="min-height:80px;"></textarea></div>
+        </div>
+        <div style="margin-top:16px;">
+          <p style="font-family:var(--font-heading);font-size:13px;font-weight:600;color:var(--dark);margin-bottom:10px;">Select Cover Photo:</p>
+          <div id="coverPicker" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="btn btn-green" onclick="savePost()">Save Post</button>
+          <button class="btn btn-outline-green" onclick="cancelUpload()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Posts Section -->
+    <div class="admin-card" id="posts">
+      <h2>Gallery Posts</h2>
+      <div id="postGrid" class="post-grid"><p style="color:var(--gray-text);font-size:14px;">No posts yet. Upload some photos above to get started.</p></div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:white;border-radius:16px;padding:36px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;">
+        <h3 style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--dark);margin-bottom:20px;">Edit Post</h3>
+        <div class="form-group" style="margin-bottom:16px;"><label>Title *</label><input type="text" id="editTitle"/></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>Category</label>
+          <select id="editCategory">
+            <option value="">Select category...</option>
+            <option>Lawn Care</option>
+            <option>Landscape Design</option>
+            <option>Mulching & Beds</option>
+            <option>Cleanup</option>
+            <option>Hardscaping</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;"><label>Description</label><textarea id="editDesc" style="min-height:80px;"></textarea></div>
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-green" onclick="saveEdit()">Save Changes</button>
+          <button class="btn btn-outline-green" onclick="closeEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Publish Section -->
+    <div class="admin-card" id="publish">
+      <h2>Publish Gallery to Website</h2>
+      <p style="color:var(--gray-text);font-size:14px;line-height:1.7;margin-bottom:20px;">When you're ready to update the live website gallery, click the button below to export a <strong>gallery-data.js</strong> file. Download it, then upload it to your Netlify site to make the new photos visible to visitors.</p>
+      <button class="btn btn-green" onclick="publishGallery()">📥 Download gallery-data.js</button>
+      <div id="publishMsg" style="display:none;margin-top:16px;background:#E8F5E9;border-radius:8px;padding:16px;font-size:14px;color:var(--primary-dark);">
+        <strong>✓ File downloaded!</strong> Now drag this file into your Netlify site folder and redeploy to update the live gallery.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD='AwLawn2025!';
+let db,pendingFiles=[],selectedCoverIdx=0,editingId=null;
+
+function checkLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===ADMIN_PASSWORD){
+    document.getElementById('loginOverlay').style.display='none';
+    document.getElementById('adminPanel').style.display='grid';
+    initDB();
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkLogin();});
+function logout(){document.getElementById('adminPanel').style.display='none';document.getElementById('loginOverlay').style.display='flex';document.getElementById('pwInput').value='';}
+
+function initDB(){
+  const req=indexedDB.open('AWGalleryDB',1);
+  req.onupgradeneeded=e=>{
+    const d=e.target.result;
+    if(!d.objectStoreNames.contains('posts')){
+      d.createObjectStore('posts',{keyPath:'id',autoIncrement:true});
+    }
+  };
+  req.onsuccess=e=>{db=e.target.result;loadPosts();};
+}
+
+// Upload zone
+const zone=document.getElementById('uploadZone');
+const fileInput=document.getElementById('fileInput');
+zone.addEventListener('click',()=>fileInput.click());
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
+fileInput.addEventListener('change',()=>handleFiles(fileInput.files));
+
+function handleFiles(files){
+  pendingFiles=[];
+  const preview=document.getElementById('uploadPreview');
+  preview.innerHTML='';
+  const arr=[...files].slice(0,20);
+  let loaded=0;
+  arr.forEach((file,i)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      pendingFiles[i]={name:file.name,dataUrl:e.target.result};
+      const img=document.createElement('img');
+      img.src=e.target.result;
+      img.style.cssText='width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--gray-border);';
+      preview.appendChild(img);
+      loaded++;
+      if(loaded===arr.length)showUploadForm();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showUploadForm(){
+  document.getElementById('uploadForm').style.display='block';
+  const cp=document.getElementById('coverPicker');
+  cp.innerHTML=pendingFiles.map((f,i)=>`
+    <img src="${f.dataUrl}" data-idx="${i}" onclick="selectCover(${i})" style="width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;border:3px solid ${i===0?'var(--primary)':'var(--gray-border)'};"/>
+  `).join('');
+  selectedCoverIdx=0;
+}
+
+function selectCover(idx){
+  selectedCoverIdx=idx;
+  document.querySelectorAll('#coverPicker img').forEach((img,i)=>{
+    img.style.border=i===idx?'3px solid var(--primary)':'3px solid var(--gray-border)';
+  });
+}
+
+function savePost(){
+  const title=document.getElementById('postTitle').value.trim();
+  if(!title){alert('Please enter a title.');return;}
+  if(pendingFiles.length===0){alert('Please upload at least one photo.');return;}
+  const post={
+    title,
+    category:document.getElementById('postCategory').value,
+    description:document.getElementById('postDesc').value,
+    images:pendingFiles.map(f=>f.dataUrl),
+    coverImage:pendingFiles[selectedCoverIdx]?.dataUrl||pendingFiles[0]?.dataUrl,
+    createdAt:Date.now()
+  };
+  const tx=db.transaction('posts','readwrite');
+  tx.objectStore('posts').add(post);
+  tx.oncomplete=()=>{cancelUpload();loadPosts();};
+}
+
+function cancelUpload(){
+  pendingFiles=[];
+  document.getElementById('uploadPreview').innerHTML='';
+  document.getElementById('uploadForm').style.display='none';
+  document.getElementById('postTitle').value='';
+  document.getElementById('postCategory').value='';
+  document.getElementById('postDesc').value='';
+  document.getElementById('coverPicker').innerHTML='';
+  document.getElementById('fileInput').value='';
+}
+
+function loadPosts(){
+  if(!db)return;
+  const tx=db.transaction('posts','readonly');
+  const all=tx.objectStore('posts').getAll();
+  all.onsuccess=()=>{
+    const posts=all.result.sort((a,b)=>b.createdAt-a.createdAt);
+    const grid=document.getElementById('postGrid');
+    if(posts.length===0){grid.innerHTML='<p style="color:var(--gray-text);font-size:14px;">No posts yet. Upload some photos above to get started.</p>';return;}
+    grid.innerHTML=posts.map(p=>`
+      <div class="post-card">
+        <img src="${p.coverImage||p.images[0]}" alt="${p.title}"/>
+        <div class="post-card-body">
+          <h4>${p.title}</h4>
+          <p>${p.category||'Uncategorized'} · ${new Date(p.createdAt).toLocaleDateString()}</p>
+          <div class="post-card-actions">
+            <button class="btn btn-sm btn-outline-green" onclick="openEdit(${p.id})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="confirmDelete(${p.id})">Delete</button>
+          </div>
+        </div>
+      </div>`).join('');
+  };
+}
+
+function confirmDelete(id){
+  if(confirm('Delete this post? This cannot be undone.')){
+    const tx=db.transaction('posts','readwrite');
+    tx.objectStore('posts').delete(id);
+    tx.oncomplete=()=>loadPosts();
+  }
+}
+
+function openEdit(id){
+  const tx=db.transaction('posts','readonly');
+  const req=tx.objectStore('posts').get(id);
+  req.onsuccess=()=>{
+    const p=req.result;
+    if(!p)return;
+    editingId=id;
+    document.getElementById('editTitle').value=p.title;
+    document.getElementById('editCategory').value=p.category||'';
+    document.getElementById('editDesc').value=p.description||'';
+    const modal=document.getElementById('editModal');
+    modal.style.display='flex';
+  };
+}
+
+function saveEdit(){
+  if(!editingId)return;
+  const tx=db.transaction('posts','readwrite');
+  const store=tx.objectStore('posts');
+  const req=store.get(editingId);
+  req.onsuccess=()=>{
+    const p=req.result;
+    p.title=document.getElementById('editTitle').value.trim()||p.title;
+    p.category=document.getElementById('editCategory').value;
+    p.description=document.getElementById('editDesc').value;
+    store.put(p);
+  };
+  tx.oncomplete=()=>{closeEdit();loadPosts();};
+}
+
+function closeEdit(){
+  document.getElementById('editModal').style.display='none';
+  editingId=null;
+}
+
+function publishGallery(){
+  const tx=db.transaction('posts','readonly');
+  const all=tx.objectStore('posts').getAll();
+  all.onsuccess=()=>{
+    const posts=all.result.sort((a,b)=>b.createdAt-a.createdAt);
+    const content=`window.AW_GALLERY_DATA = ${JSON.stringify(posts, null, 2)};\n`;
+    const blob=new Blob([content],{type:'text/javascript'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='gallery-data.js';
+    a.click();
+    document.getElementById('publishMsg').style.display='block';
+  };
+}
+</script>
+</body>
+</html>
